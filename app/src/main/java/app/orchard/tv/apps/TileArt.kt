@@ -255,6 +255,471 @@ object TileArtFactory {
     }
 
     /**
+     * A package-specific mark drawn from paths at the tile's current pixel size. Unlike a later
+     * 16:9 banner, the foreground carries no promotional copy, and unlike a phone bitmap it is
+     * rasterized afresh for both a 1080p and a 4K canvas.
+     */
+    fun forBrand(mark: BrandMark): TileArt {
+        val (top, bottom) = when (mark) {
+            BrandMark.Aerial -> 0xFF5F63DE.toInt() to 0xFF1D957D.toInt()
+            BrandMark.N1Remote -> 0xFF343B3F.toInt() to 0xFF14191C.toInt()
+            BrandMark.N1Home -> 0xFF123D5C.toInt() to 0xFF071A2B.toInt()
+            BrandMark.AvBox -> 0xFF162A4D.toInt() to 0xFF07111F.toInt()
+            BrandMark.PiliPlus -> 0xFF20C774.toInt() to 0xFF087B45.toInt()
+            BrandMark.DangbeiMarket -> 0xFF18ADE8.toInt() to 0xFF075DC3.toInt()
+            BrandMark.DangbeiAssistant -> 0xFF28B7FF.toInt() to 0xFF075BC7.toInt()
+            BrandMark.EsFileExplorer -> 0xFF45BDEB.toInt() to 0xFF09558E.toInt()
+            BrandMark.SimpleLauncher -> 0xFF173554.toInt() to 0xFF071421.toInt()
+            BrandMark.SuperSu -> 0xFF70521B.toInt() to 0xFF2F210A.toInt()
+            BrandMark.Provision -> 0xFF367BC1.toInt() to 0xFF153B76.toInt()
+            BrandMark.FileManager -> 0xFFD98A26.toInt() to 0xFF7A3F0C.toInt()
+        }
+        val back = colorTile(top, bottom)
+        val box = VectorMarkBounds.fit(mark.aspect, W.toFloat(), H.toFloat())
+        val fore = layer {
+            when (mark) {
+                BrandMark.Aerial -> drawAerialMark(box)
+                BrandMark.N1Remote -> drawN1RemoteMark(box)
+                BrandMark.N1Home -> drawN1HomeMark(box)
+                BrandMark.AvBox -> drawAvBoxMark(box)
+                BrandMark.PiliPlus -> drawPiliPlusMark(box)
+                BrandMark.DangbeiMarket -> drawDangbeiMarketMark(box)
+                BrandMark.DangbeiAssistant -> drawDangbeiAssistantMark(box)
+                BrandMark.EsFileExplorer -> drawEsFileExplorerMark(box)
+                BrandMark.SimpleLauncher -> drawSimpleLauncherMark(box)
+                BrandMark.SuperSu -> drawSuperSuMark(box)
+                BrandMark.Provision -> drawProvisionMark(box)
+                BrandMark.FileManager -> drawFileManagerMark(box)
+            }
+        }
+        return finish(back, fore)
+    }
+
+    private fun Canvas.drawAerialMark(box: MarkBox) {
+        val strokeWidth = box.height * 0.105f
+        val arc = android.graphics.Path().apply {
+            moveTo(box.left, box.top + box.height * 0.66f)
+            cubicTo(
+                box.left + box.width * 0.22f,
+                box.top + box.height * 0.18f,
+                box.left + box.width * 0.78f,
+                box.top + box.height * 0.18f,
+                box.right,
+                box.top + box.height * 0.66f,
+            )
+        }
+        drawPath(
+            arc,
+            Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = 0x33000000
+                style = Paint.Style.STROKE
+                this.strokeWidth = strokeWidth
+                strokeCap = Paint.Cap.ROUND
+            }.also { save(); translate(0f, box.height * 0.06f) },
+        )
+        restore()
+        drawPath(
+            arc,
+            Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = 0xFFFFFFFF.toInt()
+                style = Paint.Style.STROKE
+                this.strokeWidth = strokeWidth
+                strokeCap = Paint.Cap.ROUND
+            },
+        )
+    }
+
+    private fun Canvas.drawN1RemoteMark(box: MarkBox) {
+        val h = box.height
+        val cx = (box.left + box.right) / 2f
+        val cy = box.top + h * 0.49f
+        val body = RectF(cx - h * 0.22f, box.top + h * 0.04f, cx + h * 0.22f, box.bottom - h * 0.01f)
+        val radius = h * 0.13f
+
+        drawRoundRect(
+            RectF(body).apply { offset(h * 0.045f, h * 0.045f) },
+            radius, radius,
+            Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x28000000 },
+        )
+        drawRoundRect(body, radius, radius, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFF3EDE4.toInt() })
+        drawRoundRect(
+            RectF(cx - h * 0.15f, box.top + h * 0.12f, cx + h * 0.15f, box.top + h * 0.35f),
+            h * 0.035f, h * 0.035f,
+            Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFF20272A.toInt() },
+        )
+        drawCircle(cx, box.top + h * 0.62f, h * 0.105f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFFF9861.toInt() })
+        drawRoundRect(
+            RectF(cx - h * 0.075f, box.top + h * 0.82f, cx + h * 0.075f, box.top + h * 0.87f),
+            h * 0.025f, h * 0.025f,
+            Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFF343C40.toInt() },
+        )
+
+        val wave = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = 0xFFFF9A63.toInt()
+            style = Paint.Style.STROKE
+            strokeWidth = h * 0.035f
+            strokeCap = Paint.Cap.ROUND
+        }
+        drawPath(android.graphics.Path().apply {
+            moveTo(cx - h * 0.31f, cy - h * 0.16f)
+            cubicTo(cx - h * 0.49f, cy - h * 0.03f, cx - h * 0.49f, cy + h * 0.13f, cx - h * 0.31f, cy + h * 0.24f)
+        }, wave)
+        drawPath(android.graphics.Path().apply {
+            moveTo(cx + h * 0.31f, cy - h * 0.16f)
+            cubicTo(cx + h * 0.49f, cy - h * 0.03f, cx + h * 0.49f, cy + h * 0.13f, cx + h * 0.31f, cy + h * 0.24f)
+        }, wave)
+    }
+
+    private fun Canvas.drawN1HomeMark(box: MarkBox) {
+        val w = box.width
+        val h = box.height
+        val tv = RectF(box.left, box.top, box.right, box.top + h * 0.68f)
+        val outline = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = 0xFFFFFFFF.toInt()
+            style = Paint.Style.STROKE
+            strokeWidth = h * 0.035f
+            strokeJoin = Paint.Join.ROUND
+        }
+        drawRoundRect(tv, h * 0.10f, h * 0.10f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x24000000 })
+        drawRoundRect(
+            RectF(tv.left, tv.top, tv.right, tv.bottom),
+            h * 0.10f, h * 0.10f,
+            Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x221DFFCF },
+        )
+        drawRoundRect(tv, h * 0.10f, h * 0.10f, outline)
+
+        val dock = RectF(box.left + w * 0.08f, box.top + h * 0.77f, box.right - w * 0.08f, box.bottom)
+        drawRoundRect(
+            dock,
+            h * 0.12f, h * 0.12f,
+            Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFF75E6FF.toInt() },
+        )
+        for (i in 0..2) {
+            drawCircle(
+                dock.left + dock.width() * (0.22f + i * 0.28f),
+                dock.centerY(),
+                h * 0.045f,
+                Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFF083350.toInt() },
+            )
+        }
+        drawPath(android.graphics.Path().apply {
+            moveTo(w / 2f + box.left - w * 0.10f, tv.bottom)
+            lineTo(box.left + w * 0.38f, tv.bottom + h * 0.08f)
+            moveTo(box.left + w / 2f + w * 0.10f, tv.bottom)
+            lineTo(box.left + w * 0.62f, tv.bottom + h * 0.08f)
+        }, outline)
+    }
+
+    private fun Canvas.drawAvBoxMark(box: MarkBox) {
+        val levels = floatArrayOf(0.44f, 0.70f, 1f, 0.61f, 0.30f)
+        val slot = box.width / levels.size
+        val barWidth = slot * 0.64f
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            shader = LinearGradient(
+                box.left, box.top, box.right, box.bottom,
+                0xFF9AD7FF.toInt(), 0xFF4E7FFF.toInt(), Shader.TileMode.CLAMP,
+            )
+        }
+        levels.forEachIndexed { i, level ->
+            val barHeight = box.height * level
+            val left = box.left + i * slot + (slot - barWidth) / 2f
+            val top = (box.top + box.bottom - barHeight) / 2f
+            val bar = RectF(left, top, left + barWidth, top + barHeight)
+            drawRoundRect(
+                RectF(bar).apply { offset(0f, box.height * 0.035f) },
+                barWidth / 2f, barWidth / 2f,
+                Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x24000000 },
+            )
+            drawRoundRect(bar, barWidth / 2f, barWidth / 2f, paint)
+        }
+    }
+
+    private fun Canvas.drawPiliPlusMark(box: MarkBox) {
+        val path = androidx.core.graphics.PathParser.createPathFromPathData(
+            "M56,54L39.78,54l2.22,-10.94h14c3.02,0 5.47,2.45 5.47,5.47 " +
+                "0,3.02 -2.45,5.47 -5.47,5.47zM56,35.77h-9.62l-7.13,36.45h7.51L48.92,61.29h7.08" +
+                "c7.05,0 12.76,-5.71 12.76,-12.76 0,-7.05 -5.71,-12.76 -12.76,-12.76z",
+        )
+        path.fillType = android.graphics.Path.FillType.EVEN_ODD
+        fitPath(path, box, margin = 0.08f)
+        val shadow = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x30000000 }
+        save()
+        translate(0f, box.height * 0.035f)
+        drawPath(path, shadow)
+        restore()
+        drawPath(path, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFF5FFF9.toInt() })
+    }
+
+    private fun Canvas.drawDangbeiMarketMark(box: MarkBox) {
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG).apply {
+            color = 0xFFF4FBFF.toInt()
+            typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
+            textAlign = Paint.Align.CENTER
+        }
+        val text = "当贝"
+        var size = box.height * 0.86f
+        paint.textSize = size
+        while (paint.measureText(text) > box.width * 0.92f && size > box.height * 0.2f) {
+            size *= 0.94f
+            paint.textSize = size
+        }
+        val baseline = box.top + (box.height - paint.fontMetrics.top - paint.fontMetrics.bottom) / 2f
+        val cx = (box.left + box.right) / 2f
+        drawText(text, cx, baseline + box.height * 0.035f, Paint(paint).apply { color = 0x30000000 })
+        drawText(text, cx, baseline, paint)
+    }
+
+    private fun Canvas.drawDangbeiAssistantMark(box: MarkBox) {
+        val cx = (box.left + box.right) / 2f
+        val cy = (box.top + box.bottom) / 2f
+        val r = box.height * 0.46f
+        drawCircle(cx, cy + box.height * 0.035f, r, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x26000000 })
+        drawCircle(cx, cy, r, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x24FFFFFF })
+        drawCircle(
+            cx, cy, r,
+            Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = 0xD9FFFFFF.toInt()
+                style = Paint.Style.STROKE
+                strokeWidth = box.height * 0.025f
+            },
+        )
+        val trend = android.graphics.Path().apply {
+            moveTo(cx - r * 0.48f, cy + r * 0.24f)
+            lineTo(cx - r * 0.15f, cy - r * 0.10f)
+            lineTo(cx + r * 0.06f, cy + r * 0.08f)
+            lineTo(cx + r * 0.47f, cy - r * 0.34f)
+        }
+        val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = 0xFFFFFFFF.toInt()
+            style = Paint.Style.STROKE
+            strokeWidth = box.height * 0.07f
+            strokeCap = Paint.Cap.ROUND
+            strokeJoin = Paint.Join.ROUND
+        }
+        drawPath(trend, stroke)
+        drawPath(android.graphics.Path().apply {
+            moveTo(cx + r * 0.18f, cy - r * 0.34f)
+            lineTo(cx + r * 0.47f, cy - r * 0.34f)
+            lineTo(cx + r * 0.47f, cy - r * 0.06f)
+        }, stroke)
+    }
+
+    private fun Canvas.drawEsFileExplorerMark(box: MarkBox) {
+        val w = box.width
+        val h = box.height
+        val left = box.left
+        val top = box.top
+        val shadow = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x28000000 }
+        val folder = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFF8DDEFF.toInt() }
+        drawRoundRect(
+            RectF(left + w * 0.06f, top + h * 0.18f, left + w * 0.94f, top + h * 1.01f),
+            w * 0.08f, w * 0.08f, shadow,
+        )
+        drawRoundRect(
+            RectF(left + w * 0.10f, top + h * 0.13f, left + w * 0.61f, top + h * 0.34f),
+            w * 0.05f, w * 0.05f, folder,
+        )
+        drawRoundRect(
+            RectF(left + w * 0.03f, top + h * 0.29f, left + w * 0.97f, top + h * 0.96f),
+            w * 0.08f, w * 0.08f, folder,
+        )
+
+        val cloud = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFF7FCFF.toInt() }
+        drawCircle(left + w * 0.30f, top + h * 0.71f, h * 0.18f, cloud)
+        drawCircle(left + w * 0.46f, top + h * 0.64f, h * 0.22f, cloud)
+        drawCircle(left + w * 0.65f, top + h * 0.72f, h * 0.17f, cloud)
+        drawRoundRect(
+            RectF(left + w * 0.23f, top + h * 0.69f, left + w * 0.75f, top + h * 0.88f),
+            h * 0.09f, h * 0.09f, cloud,
+        )
+
+        val word = Paint(Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG).apply {
+            color = 0xFF1076C9.toInt()
+            typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD_ITALIC)
+            textAlign = Paint.Align.CENTER
+            textSize = h * 0.25f
+        }
+        drawText("ES", left + w * 0.49f, top + h * 0.81f, word)
+    }
+
+    private fun Canvas.drawSimpleLauncherMark(box: MarkBox) {
+        val colors = intArrayOf(
+            0xFFD3645D.toInt(), 0xFF4D91C8.toInt(), 0xFF9368B8.toInt(),
+            0xFF78AE58.toInt(), 0xFF42A073.toInt(), 0xFF4C9EAA.toInt(),
+        )
+        val gapX = box.width * 0.05f
+        val gapY = box.height * 0.045f
+        val cellW = (box.width - 2f * gapX) / 3f
+        val cellH = box.height * 0.235f
+        for (row in 0..1) for (col in 0..2) {
+            val i = row * 3 + col
+            val x = box.left + col * (cellW + gapX)
+            val y = box.top + row * (cellH + gapY)
+            drawRoundRect(
+                RectF(x, y, x + cellW, y + cellH),
+                cellH * 0.18f, cellH * 0.18f,
+                Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    shader = LinearGradient(
+                        x, y, x + cellW, y + cellH,
+                        ColorUtils.blendARGB(colors[i], 0xFFFFFFFF.toInt(), 0.28f),
+                        colors[i],
+                        Shader.TileMode.CLAMP,
+                    )
+                },
+            )
+        }
+
+        val tvTop = box.top + box.height * 0.55f
+        val tvBottom = box.bottom
+        val tvLeft = box.left + box.width * 0.15f
+        val tvRight = box.right - box.width * 0.12f
+        val outline = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = 0xFFFFFFFF.toInt()
+            style = Paint.Style.STROKE
+            strokeWidth = box.height * 0.035f
+            strokeJoin = Paint.Join.ROUND
+        }
+        drawRoundRect(
+            RectF(tvLeft, tvTop, tvRight, tvBottom - box.height * 0.07f),
+            box.height * 0.055f, box.height * 0.055f, outline,
+        )
+        drawPath(android.graphics.Path().apply {
+            moveTo(box.left + box.width * 0.47f, tvTop)
+            lineTo(box.left + box.width * 0.41f, box.top + box.height * 0.47f)
+            moveTo(box.left + box.width * 0.53f, tvTop)
+            lineTo(box.left + box.width * 0.60f, box.top + box.height * 0.47f)
+        }, outline)
+    }
+
+    private fun Canvas.drawSuperSuMark(box: MarkBox) {
+        val shield = android.graphics.Path().apply {
+            moveTo((box.left + box.right) / 2f, box.top)
+            lineTo(box.right, box.top + box.height * 0.18f)
+            lineTo(box.right - box.width * 0.10f, box.top + box.height * 0.72f)
+            lineTo((box.left + box.right) / 2f, box.bottom)
+            lineTo(box.left + box.width * 0.10f, box.top + box.height * 0.72f)
+            lineTo(box.left, box.top + box.height * 0.18f)
+            close()
+        }
+        save()
+        translate(0f, box.height * 0.045f)
+        drawPath(shield, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x32000000 })
+        restore()
+        drawPath(
+            shield,
+            Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                shader = LinearGradient(
+                    box.left, box.top, box.right, box.bottom,
+                    0xFFFFDE79.toInt(), 0xFFF3A51D.toInt(), Shader.TileMode.CLAMP,
+                )
+            },
+        )
+        val hash = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = 0xFF4E3206.toInt()
+            style = Paint.Style.STROKE
+            strokeWidth = box.height * 0.065f
+            strokeCap = Paint.Cap.ROUND
+        }
+        val cx = (box.left + box.right) / 2f
+        drawLine(cx - box.width * 0.13f, box.top + box.height * 0.24f, cx - box.width * 0.22f, box.top + box.height * 0.75f, hash)
+        drawLine(cx + box.width * 0.13f, box.top + box.height * 0.24f, cx + box.width * 0.22f, box.top + box.height * 0.75f, hash)
+        drawLine(cx - box.width * 0.30f, box.top + box.height * 0.43f, cx + box.width * 0.30f, box.top + box.height * 0.43f, hash)
+        drawLine(cx - box.width * 0.28f, box.top + box.height * 0.60f, cx + box.width * 0.28f, box.top + box.height * 0.60f, hash)
+    }
+
+    private fun Canvas.drawProvisionMark(box: MarkBox) {
+        val cx = (box.left + box.right) / 2f
+        val cy = (box.top + box.bottom) / 2f
+        val radius = box.height * 0.39f
+        val nodes = listOf(
+            cx to cy - radius,
+            cx + radius to cy,
+            cx to cy + radius,
+            cx - radius to cy,
+        )
+        val line = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = 0xCCFFFFFF.toInt()
+            style = Paint.Style.STROKE
+            strokeWidth = box.height * 0.035f
+        }
+        drawPath(android.graphics.Path().apply {
+            moveTo(nodes[0].first, nodes[0].second)
+            nodes.drop(1).forEach { lineTo(it.first, it.second) }
+            close()
+        }, line)
+        nodes.forEach {
+            drawCircle(it.first, it.second, box.height * 0.075f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFFFFFFF.toInt() })
+        }
+        val check = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = 0xFF1E67EA.toInt()
+            style = Paint.Style.STROKE
+            strokeWidth = box.height * 0.075f
+            strokeCap = Paint.Cap.ROUND
+            strokeJoin = Paint.Join.ROUND
+        }
+        drawPath(android.graphics.Path().apply {
+            moveTo(cx - box.width * 0.14f, cy)
+            lineTo(cx - box.width * 0.035f, cy + box.height * 0.11f)
+            lineTo(cx + box.width * 0.17f, cy - box.height * 0.13f)
+        }, check)
+    }
+
+    private fun Canvas.drawFileManagerMark(box: MarkBox) {
+        val w = box.width
+        val h = box.height
+        val folder = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFFFCF70.toInt() }
+        drawRoundRect(
+            RectF(box.left + w * 0.04f, box.top + h * 0.14f, box.left + w * 0.54f, box.top + h * 0.38f),
+            w * 0.05f, w * 0.05f, folder,
+        )
+        drawRoundRect(
+            RectF(box.left, box.top + h * 0.28f, box.right, box.bottom),
+            w * 0.08f, w * 0.08f,
+            Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                shader = LinearGradient(
+                    box.left, box.top, box.right, box.bottom,
+                    0xFFFFE29A.toInt(), 0xFFFFB534.toInt(), Shader.TileMode.CLAMP,
+                )
+            },
+        )
+        val doc = RectF(box.left + w * 0.37f, box.top + h * 0.12f, box.right - w * 0.09f, box.top + h * 0.75f)
+        drawRoundRect(
+            RectF(doc).apply { offset(w * 0.025f, h * 0.045f) },
+            w * 0.035f, w * 0.035f,
+            Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x32000000 },
+        )
+        drawRoundRect(doc, w * 0.035f, w * 0.035f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFFFFFFF.toInt() })
+        val lines = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = 0xFFB86E18.toInt()
+            style = Paint.Style.STROKE
+            strokeWidth = h * 0.025f
+            strokeCap = Paint.Cap.ROUND
+        }
+        for (i in 0..2) {
+            val y = doc.top + h * (0.35f + i * 0.14f)
+            drawLine(doc.left + w * 0.06f, y, doc.right - w * 0.06f, y, lines)
+        }
+    }
+
+    /** Uniformly scales [path] into [box], keeping the mark's own proportions and centre. */
+    private fun fitPath(path: android.graphics.Path, box: MarkBox, margin: Float) {
+        val bounds = RectF()
+        path.computeBounds(bounds, true)
+        if (bounds.isEmpty) return
+        val scale = minOf(
+            box.width * (1f - 2f * margin) / bounds.width(),
+            box.height * (1f - 2f * margin) / bounds.height(),
+        )
+        val cx = (box.left + box.right) / 2f
+        val cy = (box.top + box.bottom) / 2f
+        val matrix = android.graphics.Matrix().apply {
+            setScale(scale, scale)
+            postTranslate(cx - bounds.centerX() * scale, cy - bounds.centerY() * scale)
+        }
+        path.transform(matrix)
+    }
+
+    /**
      * Weather gets its colors, as on tvOS: a warm sun half behind a white cloud. Everything else is
      * one white glyph.
      */

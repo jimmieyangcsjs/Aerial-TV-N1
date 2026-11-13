@@ -17,6 +17,8 @@ class TileRecipe(
     val keepColors: Boolean = false,
     /** Drawn as Aerial's own glyph over [top]..[bottom], for apps whose art is only their name. */
     val glyph: app.orchard.tv.ui.theme.Glyph? = null,
+    /** Drawn at the tile's output resolution from vector paths, never from an app bitmap. */
+    val mark: BrandMark? = null,
 )
 
 object TileRecipes {
@@ -26,7 +28,8 @@ object TileRecipes {
         "com.duokan.videodaily" to TileRecipe(top = 0xFFFF4B4B.toInt(), bottom = 0xFFD0101C.toInt()), // 视频头条: a picture, not a plate
         // Checked against the apps on TCL MT5879 (China), drawn on Xiaomi MiTV-MFTR0.
         "cn.wps.moffice_i18n_TV" to TileRecipe(top = 0xFFFF5A3C.toInt(), bottom = 0xFFD81E1E.toInt(), white = true), // WPS TV版
-        "com.dangbeimarket" to TileRecipe(useIcon = true, keepColors = true), // 当贝市场: the banner repeats its name in two sizes; the logo is embossed
+        "com.dangbeimarket" to TileRecipe(mark = BrandMark.DangbeiMarket),
+        "com.dangbei.zhushou" to TileRecipe(mark = BrandMark.DangbeiAssistant),
         "com.wtj.cn.alipantv" to TileRecipe(useIcon = true), // 阿里云盘TV: the banner crowds its name into a corner
         "com.tcl.tshop" to TileRecipe(keepColors = true), // T惠购: the red ribbon is what makes it a gift
         "com.quark.yun.tv" to TileRecipe(top = 0xFF6A7BFF.toInt(), bottom = 0xFF3F3BE0.toInt(), white = true), // 夸克网盘
@@ -42,6 +45,27 @@ object TileRecipes {
         "com.ucmobile.yun.tv" to TileRecipe(keepColors = true), // UC网盘: a shaded logo that turns to mist in white
         "com.zmg.ott" to TileRecipe(top = 0xFF3FA9FF.toInt(), bottom = 0xFF1747E0.toInt(), white = true), // Z视介: its white Z, without the facets behind it
         "com.sohuott.tv.vod" to TileRecipe(keepColors = true), // 云视听悦厅TV: a shaded logo that turns to mist in white
+        // N1's installed apps whose phone icons or promotional banners are not suitable as TV art.
+        "com.android.tv.settings" to TileRecipe(
+            top = 0xFF5E6470.toInt(),
+            bottom = 0xFF272B33.toInt(),
+            glyph = app.orchard.tv.ui.theme.Glyph.Gear,
+        ),
+        "com.android.settings" to TileRecipe(
+            top = 0xFF747B88.toInt(),
+            bottom = 0xFF30343C.toInt(),
+            glyph = app.orchard.tv.ui.theme.Glyph.Gear,
+        ),
+        "com.android.provision" to TileRecipe(mark = BrandMark.Provision),
+        "com.phicomm.filemanager" to TileRecipe(mark = BrandMark.FileManager),
+        "app.orchard.tv" to TileRecipe(mark = BrandMark.Aerial),
+        "com.gathin.n1remote" to TileRecipe(mark = BrandMark.N1Remote),
+        "com.gathin.tvhome" to TileRecipe(mark = BrandMark.N1Home),
+        "eu.chainfire.supersu" to TileRecipe(mark = BrandMark.SuperSu),
+        "com.github.avbox.osc" to TileRecipe(mark = BrandMark.AvBox),
+        "com.example.piliplus" to TileRecipe(mark = BrandMark.PiliPlus),
+        "com.estrongs.android.pop" to TileRecipe(mark = BrandMark.EsFileExplorer),
+        "com.phicomm.launcherush.debug" to TileRecipe(mark = BrandMark.SimpleLauncher),
     )
 
     fun of(pkg: String): TileRecipe? = byPackage[pkg]

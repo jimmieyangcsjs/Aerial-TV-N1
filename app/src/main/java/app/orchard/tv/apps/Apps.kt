@@ -417,7 +417,11 @@ object AppCatalog {
         val bannerId = ai.banner.takeIf { it != 0 } ?: pi.activities?.firstOrNull { it.bannerResource != 0 }?.bannerResource ?: 0
         val banner = drawable(bannerId)?.takeIf { it.intrinsicWidth >= it.intrinsicHeight * 4 / 3 }
         val recipe = TileRecipes.of(pi.packageName)
-        val drawn = recipe?.glyph?.let { TileArtFactory.glyphTile(recipe.top ?: 0, recipe.bottom ?: 0, it) }
+        val drawn = when {
+            recipe?.mark != null -> TileArtFactory.forBrand(recipe.mark)
+            recipe?.glyph != null -> TileArtFactory.glyphTile(recipe.top ?: 0, recipe.bottom ?: 0, recipe.glyph)
+            else -> null
+        }
         val art = drawn ?: if (banner != null && recipe?.useIcon != true) TileArtFactory.fromBanner(banner)
             else TileArtFactory.fromIcon(drawable(ai.icon) ?: return null, recipe)
         label to art
@@ -435,6 +439,7 @@ object AppCatalog {
 
     /** The tile drawn from the app's own art: its recipe's glyph, its banner, or its icon. */
     private fun fromApp(pm: PackageManager, info: ActivityInfo, banner: android.graphics.drawable.Drawable?, recipe: TileRecipe?): TileArt = when {
+        recipe?.mark != null -> TileArtFactory.forBrand(recipe.mark)
         recipe?.glyph != null -> TileArtFactory.glyphTile(recipe.top ?: 0, recipe.bottom ?: 0, recipe.glyph)
         banner != null && recipe?.useIcon != true -> TileArtFactory.fromBanner(banner)
         else -> TileArtFactory.fromIcon(densest(pm, info, info.iconResource) ?: info.loadIcon(pm), recipe)
@@ -487,10 +492,15 @@ object AppCatalog {
             val own = if (stockHome) SystemTile.Home
                 else if (system) SYSTEM_TILES[pkg] ?: byCategory[pkg]?.takeIf { banner == null } else null
             val custom = CustomIcons.load(pkg)
-            // Aerial's own tiles for the firmware's apps keep their look; any other app's
-            // ready-made picture comes before what Aerial would draw from its banner or icon.
-            val library = if (custom == null && (own == null || IconLibrary.pick(pkg) == IconLibrary.Pick.Library)) IconLibrary.load(pkg) else null
             val recipe = TileRecipes.of(pkg)
+            // Aerial's own tiles for the firmware's apps keep their look; any other app's
+            // ready-made picture comes before what Aerial would draw from its banner or icon,
+            // except that a package-specific vector mark is already the deliberate replacement.
+            // An explicit library pick still wins; the automatic default does not.
+            val library = if (custom == null &&
+                (recipe?.mark == null || IconLibrary.pick(pkg) == IconLibrary.Pick.Library) &&
+                (own == null || IconLibrary.pick(pkg) == IconLibrary.Pick.Library)
+            ) IconLibrary.load(pkg) else null
             // A tile that cannot be drawn used to drop the app from Home altogether, without a word
             // in the log (com.fongmi.androidtv on TCL MT5879, issue #415). Its icon then, or
             // Android's default one, so it is always there.
