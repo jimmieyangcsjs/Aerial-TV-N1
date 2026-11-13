@@ -59,6 +59,9 @@ import app.orchard.tv.ui.components.diagLayer
 import app.orchard.tv.ui.theme.LocalReducedMotion
 import app.orchard.tv.ui.theme.Motion
 import app.orchard.tv.ui.theme.Type
+import app.orchard.tv.n1.N1RemoteStatus
+import app.orchard.tv.ui.n1.N1RemoteScreensaverOverlay
+import app.orchard.tv.ui.n1.rememberN1RemoteStatus
 import app.orchard.tv.wallpaper.AerialStream
 import app.orchard.tv.wallpaper.Aerial
 import app.orchard.tv.wallpaper.AerialSet
@@ -103,7 +106,15 @@ import kotlin.random.Random
  * from it. Home fades away around it (HomeScreen, whose clock becomes the screensaver's).
  */
 @Composable
-fun Screensaver(visible: Boolean, apps: List<AppEntry>, now: LocalDateTime, skips: ScreensaverSkips, carry: SaverCarry? = null) {
+fun Screensaver(
+    visible: Boolean,
+    apps: List<AppEntry>,
+    now: LocalDateTime,
+    skips: ScreensaverSkips,
+    carry: SaverCarry? = null,
+    remoteStatus: (@Composable () -> N1RemoteStatus?)? = null,
+) {
+    val n1RemoteStatus = remoteStatus?.invoke() ?: rememberN1RemoteStatus()
     AnimatedVisibility(
         visible = visible,
         enter = fadeIn(tween(1200, easing = Motion.EaseOut)),
@@ -115,31 +126,34 @@ fun Screensaver(visible: Boolean, apps: List<AppEntry>, now: LocalDateTime, skip
         // stays as it was through the fade out, so leaving does not start a player.
         val held = remember { mutableStateOf(carry) }
         if (visible) held.value = carry
-        when (val carried = held.value) {
-            is SaverCarry.Film -> { FilmCarry(carried.film, now, skips.steps); return@AnimatedVisibility }
-            is SaverCarry.Video -> {
-                LaunchedEffect(skips.steps) { skips.steps.collect { carried.film.skip(it) } }
-                return@AnimatedVisibility
+        Box(Modifier.fillMaxSize()) {
+            when (val carried = held.value) {
+                is SaverCarry.Film -> FilmCarry(carried.film, now, skips.steps)
+                is SaverCarry.Video -> {
+                    LaunchedEffect(skips.steps) { skips.steps.collect { carried.film.skip(it) } }
+                }
+                is SaverCarry.Still -> PhotoSaver(now, skips.steps, carried.wallpaper, carried)
+                null -> {
+                    val context = LocalContext.current
+                    var aerialFailed by remember { mutableStateOf(false) }
+                    var videosFailed by remember { mutableStateOf(false) }
+                    Box(Modifier.fillMaxSize().background(Color.Black)) {
+                        when (Wallpapers.screensaver) {
+                            ScreensaverMode.Aerial -> if (aerialFailed) PhotoSaver(now, skips.steps) else AerialSaver(
+                                now, skips.steps, onUnavailable = { aerialFailed = true }, startAt = remember {
+                                    // A paused wallpaper film still holds the decoder (one 4K decoder, MiTV-MFTR0).
+                                    LiveFilm.onHome?.letDecoderGo()
+                                    AerialStart.start(context)
+                                },
+                            )
+                            ScreensaverMode.Photos -> PhotoSaver(now, skips.steps, remember { Wallpapers.screensaverPicture() })
+                            ScreensaverMode.Clock, ScreensaverMode.System -> ClockSaver(apps, now)
+                            ScreensaverMode.Videos -> if (videosFailed) PhotoSaver(now, skips.steps) else VideoSaver(skips.steps, leaving = !visible, onUnavailable = { videosFailed = true })
+                        }
+                    }
+                }
             }
-            is SaverCarry.Still -> { PhotoSaver(now, skips.steps, carried.wallpaper, carried); return@AnimatedVisibility }
-            null -> Unit
-        }
-        val context = LocalContext.current
-        var aerialFailed by remember { mutableStateOf(false) }
-        var videosFailed by remember { mutableStateOf(false) }
-        Box(Modifier.fillMaxSize().background(Color.Black)) {
-            when (Wallpapers.screensaver) {
-                ScreensaverMode.Aerial -> if (aerialFailed) PhotoSaver(now, skips.steps) else AerialSaver(
-                    now, skips.steps, onUnavailable = { aerialFailed = true }, startAt = remember {
-                        // A paused wallpaper film still holds the decoder (one 4K decoder, MiTV-MFTR0).
-                        LiveFilm.onHome?.letDecoderGo()
-                        AerialStart.start(context)
-                    },
-                )
-                ScreensaverMode.Photos -> PhotoSaver(now, skips.steps, remember { Wallpapers.screensaverPicture() })
-                ScreensaverMode.Clock, ScreensaverMode.System -> ClockSaver(apps, now)
-                ScreensaverMode.Videos -> if (videosFailed) PhotoSaver(now, skips.steps) else VideoSaver(skips.steps, leaving = !visible, onUnavailable = { videosFailed = true })
-            }
+            N1RemoteScreensaverOverlay(visible = visible, status = n1RemoteStatus)
         }
     }
 }

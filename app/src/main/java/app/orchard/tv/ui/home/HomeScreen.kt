@@ -89,6 +89,8 @@ import app.orchard.tv.ui.theme.LocalReducedMotion
 import app.orchard.tv.ui.theme.Motion
 import app.orchard.tv.ui.theme.Type
 import app.orchard.tv.ui.components.diagLayer
+import app.orchard.tv.ui.n1.N1RemoteHomeCard
+import app.orchard.tv.ui.n1.rememberN1RemoteStatus
 import androidx.compose.runtime.snapshotFlow
 import app.orchard.tv.system.DiagLog
 import app.orchard.tv.system.LaunchFallback
@@ -293,6 +295,7 @@ fun HomeScreen(
     val density = LocalDensity.current
     val now by rememberNow()
     val scope = rememberCoroutineScope()
+    val n1RemoteStatus = rememberN1RemoteStatus()
 
     val requesters = remember { HashMap<String, FocusRequester>() }
     fun requester(key: String) = requesters.getOrPut(key) { FocusRequester() }
@@ -1137,11 +1140,18 @@ fun HomeScreen(
 
         NoticeBanner(vm.notice, Modifier.align(Alignment.TopCenter).padding(top = 24.dp), vm.noticeGlyph)
 
+        N1RemoteHomeCard(
+            status = n1RemoteStatus.takeIf {
+                !vm.screensaverVisible && overlay == Overlay.None && moving == null && !carrying
+            },
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = 22.dp),
+        )
+
         Screensaver(visible = vm.screensaverVisible, apps = apps, now = now, skips = vm.screensaverSkips, carry = when {
                 filmSaver -> if (Wallpapers.isVideo()) SaverCarry.Video(homeVideo) else SaverCarry.Film(liveFilm)
                 stillCarry != null -> stillCarry
                 else -> null
-            },
+            }, remoteStatus = { n1RemoteStatus },
         )
     }
 }

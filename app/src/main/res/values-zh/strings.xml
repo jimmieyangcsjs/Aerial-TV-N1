@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="n1_remote_name">N1 Remote</string>
+    <string name="n1_remote_scan_title">用手机遥控 N1</string>
+    <string name="n1_remote_scan_hint">扫码即可连接</string>
     <string name="guard_name">Aerial 桌面守护</string>
     <string name="guard_description">在不允许更换桌面的电视上，让 Aerial 保持为主屏幕。不会读取任何屏幕内容。</string>
 

@@ -36,6 +36,8 @@
     <uses-permission android:name="android.permission.WRITE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Signature-protected status and PIN from N1 Remote, both APKs built with this fork's key. -->
+    <uses-permission android:name="com.gathin.n1remote.permission.READ_STATUS" />
     <!-- Which app is in front, where a launcher hides from accessibility (Xiaomi PatchWall on
          Android 6, issue #81); granted over ADB. -->
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
@@ -64,6 +66,8 @@
              the picture panel through SkySetting's exported HalfScreenService; without this the
              Android 11 visibility filter hides the service. -->
         <package android:name="com.skyworth.setting" />
+        <!-- Android 11+ package visibility for the N1 Remote status provider. -->
+        <provider android:authorities="com.gathin.n1remote.status" />
         <!-- SystemProbe.openInputPicker: older Coocaa firmware's own source dialog. -->
         <intent>
             <action android:name="coocaa.intent.action.SOURCE_DIALOG" />

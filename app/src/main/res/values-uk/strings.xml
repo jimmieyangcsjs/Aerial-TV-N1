@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="n1_remote_name">N1 Remote</string>
+    <string name="n1_remote_scan_title">Керуйте N1 з телефона</string>
+    <string name="n1_remote_scan_hint">Скануйте, щоб під’єднатися</string>
     <string name="guard_name">Aerial Home Guard</string>
     <string name="guard_description">Залишає Aerial головним екраном на телевізорах, де його не можна змінити. Не читає вміст екрана.</string>
     <string name="greeting_morning">Доброго ранку</string>

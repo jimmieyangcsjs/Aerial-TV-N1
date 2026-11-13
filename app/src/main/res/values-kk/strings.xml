@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="n1_remote_name">N1 Remote</string>
+    <string name="n1_remote_scan_title">N1 құрылғысын телефоннан басқарыңыз</string>
+    <string name="n1_remote_scan_hint">Қосылу үшін сканерлеңіз</string>
     <string name="guard_name">Aerial Home Guard</string>
     <string name="guard_description">Басты экранды өзгертуге болмайтын теледидарларда Aerial-ді басты экран ретінде сақтайды. Экран мазмұнын оқымайды.</string>
     <string name="greeting_morning">Қайырлы таң</string>

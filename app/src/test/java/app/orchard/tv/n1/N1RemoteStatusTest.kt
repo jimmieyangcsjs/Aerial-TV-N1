@@ -69,4 +69,16 @@ class N1RemoteStatusTest {
 
         assertEquals(10_000L, N1RemoteStatusPolicy.refreshDelay(online))
     }
+
+    @Test
+    fun onlyUsesAStatusWhoseAddressIsStillAssignedToTheTv() {
+        val status = N1RemoteStatusPolicy.parse(
+            "192.168.1.20", 8088, "123456", true, "http://192.168.1.20:8088/?pin=123456",
+        )
+
+        assertEquals(status, N1RemoteStatusPolicy.usable(status, "192.168.1.20"))
+        assertNull(N1RemoteStatusPolicy.usable(status, "192.168.1.21"))
+        assertNull(N1RemoteStatusPolicy.usable(status, null))
+        assertNull(N1RemoteStatusPolicy.usable(status?.copy(online = false), "192.168.1.20"))
+    }
 }

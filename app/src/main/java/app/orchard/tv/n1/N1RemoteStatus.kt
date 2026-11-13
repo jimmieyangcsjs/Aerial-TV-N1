@@ -19,6 +19,9 @@ object N1RemoteStatusPolicy {
 
     fun refreshDelay(status: N1RemoteStatus?): Long = if (status?.online == true) 10_000L else 1_200L
 
+    fun usable(status: N1RemoteStatus?, currentLanAddress: String?): N1RemoteStatus? =
+        status?.takeIf { it.online && it.ip == currentLanAddress }
+
     private fun isIpv4(value: String): Boolean {
         val parts = value.split('.')
         return parts.size == 4 && parts.all { part ->
