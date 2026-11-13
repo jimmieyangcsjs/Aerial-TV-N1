@@ -26,11 +26,11 @@ class N1RemoteBridgeTest {
 
         val status = N1RemoteBridge.read(context)
 
-        assertEquals("10.0.30.35", status?.ip)
+        assertEquals("192.0.2.10", status?.ip)
         assertEquals(8988, status?.port)
-        assertEquals("135790", status?.pin)
+        assertEquals("246810", status?.pin)
         assertEquals(true, status?.online)
-        assertEquals("http://10.0.30.35:8988/?pin=135790", status?.url)
+        assertEquals("http://192.0.2.10:8988/?pin=246810", status?.url)
     }
 
     private class StatusProvider : ContentProvider() {
@@ -43,7 +43,7 @@ class N1RemoteBridgeTest {
             selectionArgs: Array<out String>?,
             sortOrder: String?,
         ): Cursor = MatrixCursor(arrayOf("ip", "port", "pin", "serviceOnline", "url")).apply {
-            addRow(arrayOf<Any>("10.0.30.35", 8988, "135790", 1, "http://10.0.30.35:8988/?pin=135790"))
+            addRow(arrayOf<Any>("192.0.2.10", 8988, "246810", 1, "http://192.0.2.10:8988/?pin=246810"))
         }
 
         override fun getType(uri: Uri): String? = null

@@ -10,12 +10,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.unit.dp
 import app.orchard.tv.n1.N1RemoteStatus
 import app.orchard.tv.n1.N1RemoteStatusPolicy
+import app.orchard.tv.ui.n1.N1RemoteHomeOverlay
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -62,6 +66,51 @@ class N1RemoteCardTest {
         compose.onAllNodesWithTag("n1-remote-card").assertCountEquals(0)
     }
 
+    @Test
+    fun screensaverUsesACompactCodeWithoutAFullCardFrame() {
+        compose.mainClock.autoAdvance = false
+        mountScreensaver()
+        compose.mainClock.advanceTimeBy(3_100)
+
+        val card = compose.onNodeWithTag("n1-remote-card").getUnclippedBoundsInRoot()
+        val qr = compose.onNodeWithTag("n1-remote-qr").getUnclippedBoundsInRoot()
+
+        assertEquals(132f, (qr.right - qr.left).value, 0.5f)
+        assertEquals(132f, (qr.bottom - qr.top).value, 0.5f)
+        assertEquals(152f, (card.right - card.left).value, 0.5f)
+        assertEquals(188f, (card.bottom - card.top).value, 0.5f)
+    }
+
+    @Test
+    fun homeUsesTheSameFloatingCodeTreatmentAtASmallerSize() {
+        mountHome(shelfVisible = true)
+
+        val card = compose.onNodeWithTag("n1-remote-card").getUnclippedBoundsInRoot()
+        val qr = compose.onNodeWithTag("n1-remote-qr").getUnclippedBoundsInRoot()
+
+        assertEquals(56f, (qr.right - qr.left).value, 0.5f)
+        assertEquals(56f, (qr.bottom - qr.top).value, 0.5f)
+        assertEquals(180f, (card.right - card.left).value, 0.5f)
+        assertEquals(56f, (card.bottom - card.top).value, 0.5f)
+    }
+
+    @Test
+    fun homeShowsTheCodeAboveTheShelfWithoutCoveringTiles() {
+        mountHome(shelfVisible = true)
+
+        val card = compose.onNodeWithTag("n1-remote-card").getUnclippedBoundsInRoot()
+
+        assertEquals(22f, card.top.value, 0.5f)
+        assertEquals(78f, card.bottom.value, 0.5f)
+    }
+
+    @Test
+    fun homeHidesTheCodeOnceTheGridOccupiesTheTopOfTheScreen() {
+        mountHome(shelfVisible = false)
+
+        compose.onAllNodesWithTag("n1-remote-card").assertCountEquals(0)
+    }
+
     private fun mountScreensaver() {
         compose.runOnUiThread {
             val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup()
@@ -74,13 +123,28 @@ class N1RemoteCardTest {
         }
     }
 
+    private fun mountHome(shelfVisible: Boolean) {
+        compose.runOnUiThread {
+            val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup()
+            host = controller
+            controller.get().setContent {
+                Box(Modifier.fillMaxSize()) {
+                    N1RemoteHomeOverlay(
+                        status = status,
+                        shelfVisible = shelfVisible,
+                    )
+                }
+            }
+        }
+    }
+
     private companion object {
         val onlineStatus: N1RemoteStatus = N1RemoteStatusPolicy.parse(
-            "10.0.30.35",
-            8988,
-            "135790",
+            "192.0.2.10",
+            8088,
+            "246810",
             true,
-            "http://10.0.30.35:8988/?pin=135790",
+            "http://192.0.2.10:8088/?pin=246810",
         )!!
     }
 }

@@ -21,8 +21,8 @@ android {
         targetSdk = 34
         // The N1 fork redraws app tiles, and the disk cache includes this code so upgrades
         // rebuild every bitmap at the new vector recipe rather than keeping the old artwork.
-        versionCode = 139
-        versionName = "1.96"
+        versionCode = 142
+        versionName = "1.99"
         // `./gradlew -Pdiag ...`: a build for one reporter's TV whose logcat shows no app lines;
         // see system/DiagLog.kt.
         val diag = project.hasProperty("diag")

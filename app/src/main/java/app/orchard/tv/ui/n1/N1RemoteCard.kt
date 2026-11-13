@@ -10,7 +10,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,6 +38,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -65,7 +68,9 @@ import kotlin.math.roundToInt
 
 private val RemoteAccent = Color(0xFF68E5F3)
 private val RemoteSurface = Color(0xF21A2028)
-private val RemoteShape = RoundedCornerShape(18.dp)
+private val RemoteQrPaper = Color(0xFFF4FAFB)
+private val RemoteQrInk = Color(0xFF07151B)
+private val RemotePanelShape = RoundedCornerShape(14.dp)
 private const val SCREENSAVER_CARD_DELAY_MS = 3_000L
 private const val QR_QUIET_MODULES = 4
 
@@ -82,6 +87,18 @@ fun N1RemoteHomeCard(status: N1RemoteStatus?, modifier: Modifier = Modifier) {
     ) {
         held?.let { RemoteCard(it, large = false) }
     }
+}
+
+/**
+ * Home's remote code belongs to the shelf above the grid. Once scrolling or focus brings tiles up
+ * into that space, the card leaves through the same fade so it never covers an app.
+ */
+@Composable
+fun BoxScope.N1RemoteHomeOverlay(status: N1RemoteStatus?, shelfVisible: Boolean) {
+    N1RemoteHomeCard(
+        status = status.takeIf { shelfVisible },
+        modifier = Modifier.align(Alignment.TopCenter).padding(top = 22.dp),
+    )
 }
 
 /**
@@ -138,39 +155,14 @@ fun rememberN1RemoteStatus(): N1RemoteStatus? {
 
 @Composable
 private fun RemoteCard(status: N1RemoteStatus, large: Boolean, modifier: Modifier = Modifier) {
-    val width = if (large) 226.dp else 236.dp
-    val height = if (large) 270.dp else 72.dp
+    val width = if (large) 152.dp else 180.dp
+    val height = if (large) 188.dp else 56.dp
     Box(
         modifier
             .testTag("n1-remote-card")
             // Informational only: a remote key or tap must go on to wake the screensaver.
             .focusProperties { canFocus = false }
             .size(width, height)
-            .clip(RemoteShape)
-            .drawBehind {
-                drawRoundRect(
-                    brush = Brush.linearGradient(
-                        colors = listOf(Color(0xFF23313C), RemoteSurface, Color(0xF211161C)),
-                        start = Offset.Zero,
-                        end = Offset(size.width, size.height),
-                    ),
-                )
-                drawRoundRect(
-                    color = Color.Black.copy(alpha = 0.25f),
-                    topLeft = Offset(0f, size.height * 0.58f),
-                    size = Size(size.width, size.height * 0.42f),
-                )
-                drawLine(
-                    brush = Brush.horizontalGradient(
-                        listOf(Color.Transparent, RemoteAccent.copy(alpha = 0.75f), Color.Transparent),
-                    ),
-                    start = Offset(size.width * 0.1f, 0f),
-                    end = Offset(size.width * 0.9f, 0f),
-                    strokeWidth = 1.5.dp.toPx(),
-                )
-            }
-            .border(1.dp, Color.White.copy(alpha = 0.12f), RemoteShape)
-            .padding(if (large) 14.dp else 9.dp),
     ) {
         if (large) LargeContents(status) else CompactContents(status)
     }
@@ -179,10 +171,58 @@ private fun RemoteCard(status: N1RemoteStatus, large: Boolean, modifier: Modifie
 @Composable
 private fun CompactContents(status: N1RemoteStatus) {
     Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
-        QrCode(status.url, 52.dp)
-        Spacer(Modifier.width(11.dp))
-        Column(Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+        QrCode(status.url, 56.dp)
+        Spacer(Modifier.width(10.dp))
+        Column(
+            Modifier.width(114.dp).height(56.dp),
+            verticalArrangement = Arrangement.Center,
+        ) {
+            BasicText(
+                stringResource(R.string.n1_remote_scan_hint),
+                style = Type.Caption.copy(
+                    color = Color.White.copy(alpha = 0.72f),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Normal,
+                    letterSpacing = 0.01.em,
+                    shadow = lowKeyTextShadow(),
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(3.dp))
+            BasicText(
+                stringResource(R.string.n1_remote_name),
+                style = Type.Caption.copy(
+                    color = Color.White.copy(alpha = 0.42f),
+                    fontSize = 8.sp,
+                    fontWeight = FontWeight.Normal,
+                    letterSpacing = 0.03.em,
+                    shadow = lowKeyTextShadow(),
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+private fun lowKeyTextShadow() = Shadow(
+    color = Color.Black.copy(alpha = 0.72f),
+    offset = Offset(0f, 1.5f),
+    blurRadius = 4f,
+)
+
+@Composable
+private fun LargeContents(status: N1RemoteStatus) {
+    Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+        QrCode(status.url, 132.dp)
+        Spacer(Modifier.height(8.dp))
+        RemoteInfoPanel(Modifier.width(152.dp).height(48.dp)) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 StatusDot()
                 Spacer(Modifier.width(7.dp))
                 BasicText(
@@ -191,59 +231,48 @@ private fun CompactContents(status: N1RemoteStatus) {
                         color = Color.White,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.W700,
-                        letterSpacing = 0.025.em,
+                        letterSpacing = 0.035.em,
                     ),
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                 )
             }
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(3.dp))
             BasicText(
-                stringResource(R.string.n1_remote_scan_hint),
-                style = Type.Caption.copy(color = Color.White.copy(alpha = 0.7f), fontSize = 10.sp),
+                stringResource(R.string.n1_remote_scan_title),
+                style = Type.Caption.copy(color = RemoteAccent.copy(alpha = 0.86f), fontSize = 10.sp),
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
             )
         }
     }
 }
 
 @Composable
-private fun LargeContents(status: N1RemoteStatus) {
-    Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            StatusDot()
-            Spacer(Modifier.width(8.dp))
-            BasicText(
-                stringResource(R.string.n1_remote_name),
-                style = Type.Headline.copy(
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.W700,
-                    letterSpacing = 0.05.em,
-                ),
-            )
-        }
-        Spacer(Modifier.height(9.dp))
-        QrCode(status.url, 172.dp)
-        Spacer(Modifier.height(11.dp))
-        BasicText(
-            stringResource(R.string.n1_remote_scan_title),
-            style = Type.Title.copy(color = Color.White, fontSize = 15.sp),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Spacer(Modifier.height(3.dp))
-        BasicText(
-            stringResource(R.string.n1_remote_scan_hint),
-            style = Type.Caption.copy(color = RemoteAccent.copy(alpha = 0.82f), fontSize = 10.sp),
-            maxLines = 1,
-        )
-    }
+private fun RemoteInfoPanel(modifier: Modifier, content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        modifier
+            .clip(RemotePanelShape)
+            .drawBehind {
+                drawRoundRect(
+                    brush = Brush.linearGradient(
+                        colors = listOf(Color(0xE6253440), RemoteSurface, Color(0xE611161C)),
+                        start = Offset.Zero,
+                        end = Offset(size.width, size.height),
+                    ),
+                )
+                drawLine(
+                    brush = Brush.horizontalGradient(
+                        listOf(Color.Transparent, RemoteAccent.copy(alpha = 0.68f), Color.Transparent),
+                    ),
+                    start = Offset(size.width * 0.12f, 0f),
+                    end = Offset(size.width * 0.88f, 0f),
+                    strokeWidth = 1.dp.toPx(),
+                )
+            }
+            .border(1.dp, Color.White.copy(alpha = 0.11f), RemotePanelShape)
+            .padding(horizontal = 11.dp, vertical = 6.dp),
+        verticalArrangement = Arrangement.Center,
+        content = content,
+    )
 }
 
 @Composable
@@ -256,7 +285,7 @@ private fun StatusDot() {
 
 /**
  * Drawn from QR modules rather than a scaled bitmap, with a complete four-module quiet zone. This
- * keeps every module square and crisp at both 1080p (172 dp is 344 px) and 4K (688 px).
+ * keeps every module square and crisp while the floating layout scales cleanly at 1080p and 4K.
  */
 @Composable
 private fun QrCode(text: String, size: Dp) {
@@ -273,18 +302,31 @@ private fun QrCode(text: String, size: Dp) {
             ),
         )
     }
+    val shape = RoundedCornerShape(if (size > 72.dp) 10.dp else 7.dp)
     Box(
         Modifier
+            .testTag("n1-remote-qr")
             .size(size)
-            .clip(RoundedCornerShape(4.dp))
-            .background(Color.White),
+            .clip(shape)
+            .background(RemoteQrPaper)
+            .border(
+                1.dp,
+                Brush.linearGradient(
+                    listOf(
+                        RemoteAccent.copy(alpha = 0.58f),
+                        Color.White.copy(alpha = 0.18f),
+                        RemoteAccent.copy(alpha = 0.36f),
+                    ),
+                ),
+                shape,
+            ),
     ) {
         Canvas(Modifier.fillMaxSize()) {
             val totalModules = matrix.width + QR_QUIET_MODULES * 2
             val module = min(this.size.width, this.size.height) / totalModules
             val originX = (this.size.width - totalModules * module) / 2f
             val originY = (this.size.height - totalModules * module) / 2f
-            drawRect(Color.White)
+            drawRect(RemoteQrPaper)
             for (y in 0 until matrix.height) {
                 for (x in 0 until matrix.width) {
                     if (!matrix[x, y]) continue
@@ -292,7 +334,7 @@ private fun QrCode(text: String, size: Dp) {
                     val top = (originY + (y + QR_QUIET_MODULES) * module).roundToInt().toFloat()
                     val right = (originX + (x + QR_QUIET_MODULES + 1) * module).roundToInt().toFloat()
                     val bottom = (originY + (y + QR_QUIET_MODULES + 1) * module).roundToInt().toFloat()
-                    drawRect(Color.Black, Offset(left, top), Size(right - left, bottom - top))
+                    drawRect(RemoteQrInk, Offset(left, top), Size(right - left, bottom - top))
                 }
             }
         }
